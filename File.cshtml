@@ -1,0 +1,271 @@
+@using TeamSystem.IT.Pandora.HybridApp.PLM.Models;
+@using TeamSystem.IT.Pandora.HybridApp.PLM.Resources;
+@using TeamSystem.IT.Pandora.HybridApp.PLM.Models.Registries.BBS
+@model BBSModel
+
+@{ ViewBag.Title = "BBS"; }
+@if (!Model.Result.Success)
+{
+    <script>
+        $(function () {
+	        stopLoading();
+	        showNotify("@Model.Result.Message", "warning");
+        });
+    </script>
+}
+else
+{
+    <script src="~/Scripts/views/acpbbs.js" asp-append-version="true"></script>
+
+    <!-- BBS Grid-->
+    <div id="bbs-grid" class="content-block">
+        <div class="widget">
+            <div class="widget-header">
+                BBS
+                <div class="input-group gridSearch">
+                    <input type="text" spellcheck="false" autocomplete="off" class="form-control" placeholder="@PandoraAppResources.Shared_BBS_Search" onkeypress="(event.keyCode ? event.keyCode : event.which) == 13 && searchBbs()">
+                    <span id="btn-search" class="input-group-addon" onclick="searchBbs()"><i class="fa fa-search"></i></span>
+                </div>
+                <span class="widget-buttons">
+                    @if (@Model.Rules.Contains("Add.BBS.Rules"))
+                    {
+                        <i class="content-add fa fa-plus" data-toggle="tooltip" data-placement="bottom" title="@PandoraAppResources.BBS_AddNewBBSToolTip"></i>
+                    }
+                    <i class="content-refresh fa fa-refresh" data-toggle="tooltip" data-placement="bottom" title="@PandoraAppResources.Shared_RefreshGrid"></i>
+                </span>
+            </div>
+            <div class="widget-content">
+                @Html.AjaxGrid(Url.Action("BbsGrid", "BBS"))
+            </div>
+        </div>
+    </div>
+    <!-- End BBS Grid-->
+
+    <div class="modal" id="confirmDeletePopup" role="dialog" data-backdrop="false">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: beige; padding: 13px; font-size: 15px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times"></i></button>
+                    @PandoraAppResources.AP_BBS_DeleteDialog
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" id="confirmDeletePopup-yesBtn">@PandoraAppResources.Shared_FilterDialog_Yes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="confirmDeletePopup-noBtn">@PandoraAppResources.Shared_FilterDialog_No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Bbs -->
+    <div aria-hidden="true" aria-labelledby="modalEditLabel" role="dialog" tabindex="-1" id="modalBbsEdit" class="modal fade pandora-custom-modal" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times"></i></button>
+                    <h4 class="modal-title">@PandoraAppResources.BBS_EditModal</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="modalBbsEditForm" name="editForm" class="form-validation" autocomplete="off" spellcheck="false">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_Code</label>
+                                    <input disabled placeholder="Code" name="ModalCode" id="modal-edit-bbs-code" type="text">
+                                </div>
+                            </div>
+                            <div class="colGroup">
+                                <span>
+                                    ACP
+                                </span>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.BBS_Family</label>
+                                    <select required class="familySelect" id="modal-edit-bbs-family" name="modal-edit-bbs-family" asp-items="@Model.ACPFamilies.Select(it => new SelectListItem { Value = it.Oid.ToString(), Text = it.Name })">
+                                        <option value="" selected>@PandoraAppResources.Shared_EmptySelect</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.BBS_Product</label>
+                                    <select required class="productSelect" id="modal-edit-bbs-product" name="modal-edit-bbs-product"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_Procedure</label>
+                                    <select required class="procedureSelect" id="modal-edit-bbs-procedure" name="modal-edit-bbs-procedure"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_ProcedureType</label>
+                                    <select required="required" class="procedureTypeSelect" id="modal-edit-bbs-procType" name="modal-edit-bbs-procType" multiple="multiple"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_Module</label>
+                                    <select class="moduleSelect" id="modal-edit-bbs-module" name="modal-edit-bbs-module"></select>
+                                </div>
+                            </div>
+                            <div class="colGroup">
+                                <span>
+                                    BBS
+                                </span>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_BbsProcedure</label>
+                                    <select required id="modal-edit-bbs-procedurebbs" name="modal-edit-bbs-procedurebbs" asp-items="@Model.ProceduresBbs.Select(it => new SelectListItem { Value = it.Code.ToString(), Text = it.Name })">
+                                        <option value="" selected >@PandoraAppResources.Shared_EmptySelect</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_BbsModule</label>
+                                    <select required id="modal-edit-bbs-modulebbs" name="modal-edit-bbs-modulebbs"></select>
+                                </div>
+                            </div>
+                            <div class="col-120">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_EnabledF</label>
+                                    <label class="switch">
+                                        <input id="modal-edit-bbs-enabled" type="checkbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                @if (Model.Rules.Contains("Update.BBS.Rules"))
+                {
+                    <div class="modal-footer">
+                        <button class="btn btn-default" id="btn-edit" type="button">@PandoraAppResources.Shared_AP_Save</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- End Modal Edit Bbs-->
+    <!-- Modal Create Bbs -->
+    <div aria-hidden="true" aria-labelledby="modalCreateLabel" role="dialog" tabindex="-1" id="modalBbsCreate" class="modal fade pandora-custom-modal" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times"></i></button>
+                    <h4 class="modal-title">@PandoraAppResources.BBS_AddModal</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="modalBbsCreateForm" name="createForm" class="form-validation">
+                        <div class="row">
+                            <div class="colGroup">
+                                <span>
+                                    ACP
+                                </span>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.BBS_Family</label>
+                                    <select required class="familySelect" id="modal-create-bbs-family" name="modal-create-bbs-family" asp-items="@Model.ACPFamilies.Select(it => new SelectListItem { Value = it.Oid.ToString(), Text = it.Name })">
+                                        <option value="" selected>@PandoraAppResources.Shared_EmptySelect</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.BBS_Product</label>
+                                    <select required class="productSelect" id="modal-create-bbs-product" name="modal-create-bbs-product"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_Procedure</label>
+                                    <select required class="procedureSelect" id="modal-create-bbs-procedure" name="modal-create-bbs-procedure"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_ProcedureType</label>
+                                    <select required="required" class="procedureTypeSelect" id="modal-create-bbs-procType" name="modal-create-bbs-procType" multiple="multiple"></select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_Module</label>
+                                    <select class="moduleSelect" id="modal-create-bbs-module" name="modal-create-bbs-module"></select>
+                                </div>
+                            </div>
+                            <div class="colGroup">
+                                <span>
+                                    BBS
+                                </span>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_BbsProcedure</label>
+                                    <select required id="modal-create-bbs-procedurebbs" name="modal-create-bbs-procedurebbs" asp-items="@Model.ProceduresBbs.Select(it => new SelectListItem { Value = it.Code.ToString(), Text = it.Name })">
+                                        <option value="" selected >@PandoraAppResources.Shared_EmptySelect</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_BbsModule</label>
+                                    <select required id="modal-create-bbs-modulebbs" name="modal-create-bbs-modulebbs"></select>
+                                </div>
+                            </div>
+                            <div class="col-120">
+                                <div class="inputContainer">
+                                    <label>@PandoraAppResources.Shared_EnabledF</label>
+                                    <label class="switch">
+                                        <input id="modal-create-bbs-enabled" type="checkbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    @if (@Model.Rules.Contains("Add.BBS.Rules"))
+                    {
+                        <button class="btn btn-default" id="btn-create-bbs" type="button">@PandoraAppResources.Shared_Save</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Modal Create BBS -->
+    <style type="text/css">
+        .redborder {
+            border: 1px solid red;
+        }
+    </style>
+
+    <script>
+      //This is needed for the multiselects that are hidden and so ignored by validation for default 
+        $.validator.setDefaults({
+            ignore: [],
+        });
+        $(function () {
+            var rulesObj = @Html.Raw(Json.Serialize(Model.Rules));
+            var emptySelect = '@PandoraAppResources.Shared_EmptySelect';
+            var urlModulesBbs = '@Url.Action("ModulesBbsList", "BBS")';
+            var urlModules = '@Url.Action("GetBbsModulesForProcedure", "BBS")';
+            var urlProduct = '@Url.Action("GetProductsForFamily", "BBS")';
+            var urlProcedures = '@Url.Action("GetProceduresForProduct", "BBS")';
+            var noProcType = '@PandoraAppResources.BBS_ProcType_Not_Found';
+            var labels = {
+                "Shared_EmptySelect": "@PandoraAppResources.Shared_EmptySelect"
+			};
+            initBbs(rulesObj, emptySelect,urlModulesBbs,urlModules,urlProduct,urlProcedures,labels,noProcType);
+			$('.popover').hide();
+			$('.popup-content').hide();
+
+        });
+    </script>
+}
